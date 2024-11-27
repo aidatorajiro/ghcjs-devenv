@@ -14,6 +14,10 @@ Before setup, you need a workspace folder (different from this repository) and p
 1. `echo "system-ghc: false" >> .stack-cache/config.yaml`
 1. `docker-compose up`
 
+Connect to the container via `docker exec -it rdwp-myservice-1 /root/uid-remap.bash bash` or `ssh haskell@localhost -p2222` (password: haskell)
+
+Edit project files via `nvim` or VSCode Docker Container with haskell plugin.
+
 ## How to build a project
 
 Just run `stack build` (for GHC binary) or `cabal build` (for GHCJS binary) within your project.
