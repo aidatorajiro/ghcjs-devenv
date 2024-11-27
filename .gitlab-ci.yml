@@ -1,0 +1,67 @@
+# This file is a template, and might need editing before it works on your project.
+# This is a sample GitLab CI/CD configuration file that should run without any modifications.
+# It demonstrates a basic 3 stage CI/CD pipeline. Instead of real tests or scripts,
+# it uses echo commands to simulate the pipeline execution.
+#
+# A pipeline is composed of independent jobs that run scripts, grouped into stages.
+# Stages run in sequential order, but jobs within stages run in parallel.
+#
+# For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
+#
+# You can copy and paste this template into a new `.gitlab-ci.yml` file.
+# You should not add this template to an existing `.gitlab-ci.yml` file by using the `include:` keyword.
+#
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
+
+default:
+  image: docker:27.3.1
+  services:
+    - docker:27.3.1-dind
+  before_script:
+    - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+stages:
+  - build
+  - deploy
+
+build-job:
+  stage: build
+  cache:
+    - key:
+        files:
+        - ./frontend/project-file-910
+      paths:
+        - ./.cabal-cache
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - mkdir .cabal-cache || true
+    - chown -R 1000:1000 ./
+    - docker run -v "$(pwd)":/workspace -v "$(pwd)"/.cabal-cache:/home/haskell/.cabal $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA bash -c ". ~/e.sh; cd /workspace; cabal update; ./build-cabal-910.bash"
+    - chown -R 0:0 ./
+  artifacts:
+    paths:
+      - ./RDWP-exe.jsexe
+
+deploy-job:
+  stage: deploy
+  environment: production
+  script:
+    - git config --global credential.helper store
+    - ls ./RDWP-exe.jsexe
+    - echo "$GIT_CREDENTIALS" > ~/.git-credentials
+    - git config --global user.name "$GIT_CONFIG_USERNAME"
+    - git config --global user.email "$GIT_CONFIG_EMAIL"
+    - cd RDWP-exe.jsexe
+    - git init
+    - git branch -m $GIT_BRANCH
+    - git remote add origin "$GIT_URL"
+    - git add .
+    - git commit -m 'Initial commit'
+    - git push --force origin $GIT_BRANCH
