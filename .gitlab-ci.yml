@@ -26,10 +26,14 @@ default:
 
 stages:
   - build
-  - deploy
 
 build-job:
   stage: build
+  rules:
+    - changes:
+      - Dockerfile
+      - nvim-config/**/*
+      - uid-remap.bash
   script:
     - docker pull $CI_REGISTRY_IMAGE:latest || true
     - docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
