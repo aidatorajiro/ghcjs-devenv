@@ -17,9 +17,9 @@
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
 default:
-  image: docker:stable
+  image: docker:latest
   services:
-    - docker:stable-dind
+    - docker:latest-dind
   before_script:
     - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
